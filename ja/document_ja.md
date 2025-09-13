@@ -1,4 +1,4 @@
-# Document (ver 0.1.0)
+# Document (ver 0.2.0)
 注1: 現在、このツールには、ゲームのロード処理でランダムにdesyncを起こすという問題があります。
 
 注2: **このツールはオフラインで利用するために作られています。オンライン(Pretendoなど)では使用しないでください。**
@@ -33,6 +33,7 @@ CUIではコマンドを入力することで、ツールを操作できます�
 |`rsw`|`reload`してから`startwith`|
 |`dumpmacro [skip:int=0]`|ロード済みのマクロを別形式で{MACRO PATH}.dump.txtにtable形式で保存。先頭から`[skip]`フレーム無視する。|
 |`dumpmacro2 [skip:int=0]`|`dumpmacro`と同じだが、RLE形式で保存|
+|`print`|load済みのマクロをCUIに出力する|
 
 #### `with`モードについて
 マクロによる操作内容と手動の操作内容を合成する。例えば、`Y>*999`というマクロが実行されている場合、手動で`B`を入力している間は`Y>B`として解釈される。
@@ -73,17 +74,18 @@ Y>*40
 Y
 B
 ```
-コードには以下の三種類あります。
+コードには以下の4種類あります。
 - "!"から始まるコード: Command
 - "#"から始まるコード: Preprocessor
+- "@"から始まるコード: Label
 - それ以外: 入力情報
 
 コードは以下の形式です。 
 
+- `[code:str]`
 - `[code:str]*[repeat:int]`
-- `[code:str]` (これは、`[code:str]*1`と同じ意味です。)
-
-`[repeat]`で指定した分、codeの内容を繰り返します。
+  - `[repeat]`で指定した分、codeの内容を繰り返します。
+  - Commandか入力情報のみで使えます。
 
 ### 入力情報
 入力情報は、入力するボタンを表す文字からなる文字列です。
@@ -129,12 +131,66 @@ Preprocessorは、マクロのロード時に特殊な処理を行います。`[
 
 | Preprocessor | Description |
 |:-----------|:-----------|
-|`#SUB [name:str]`|次の#ENDSUBまでの内容を`[name]`という名前のサブルーチンとして定義する|
-|`#ENDSUB`|`#SUB`の終わりを表す|
-|`#ESUB`|`#ENDSUB`のエイリアス|
+|`#SUB [name:str]`|対となる`#END`までの内容を`[name]`という名前のサブルーチンとして定義する|
+|`#LOOP [count:int]`| 対となる`#END`までの内容を`[count]`回繰り返す|
+|`#END`|`#SUB`や`#LOOP`の終わり|
+|`#LOAD [path:str]`|`path`で指定したマクロを展開する|
+|`#LOAD [start_label:str] [path:str]`|`path`で指定したマクロファイルの`start_label`以降を展開する。@は不要。そのファイル内に直接書かれているラベル名である必要がある。|
+|~~`#ENDSUB`~~| 廃止済み。`#END`と同じ。|
+|~~`#ESUB`~~|廃止済み。`#END`と同じ。|
 
-### Comand
-Commandは実行時に評価されます。フレームは消費しません。!callを除いて`[repeat]`が使えません。
+
+`#LOOP`や`#SUB`はネストできます。
+```
+// Y*12と同じ。
+#LOOP 4
+ #LOOP 3
+  Y
+ #END
+#END
+```
+サブルーチンの名前にはスコープの概念があります。
+```
+#LOOP 3
+ #SUB test
+  Y
+ #END
+ // ここではtestを参照できる
+#END
+// ここではtestを参照不可
+```
+`#LOAD`では、`#SUB`,`#LOOP`と`#END`の対を二つのファイルに分けるような使い方はできません。
+```
+--- macro1.txt ---
+#LOOP
+#LOAD ./macro2.txt
+
+--- macro2.txt ---
+#END // compile error
+```
+
+ファイルをまたがったサブルーチンの参照は可能です。
+```
+--- macro2.txt ---
+#SUB test
+#END
+
+--- macro1.txt ---
+#LOAD ./macro2.txt
+// testは参照できる。
+```
+
+
+### Label
+Labelはマクロファイル中の特定の位置に名前をつけるためのものです。現状は`#LOAD`でのみ使います。
+@+nameの形式です。
+#### 例
+- @start
+- @test
+
+
+### Command
+Commandは実行時に評価されます。フレームは消費しません。
 
 | Command | Description |
 |:-----------|:-----------|

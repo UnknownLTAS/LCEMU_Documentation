@@ -50,7 +50,7 @@ Y>*40
 
 これらの詳しい説明は[ドキュメント](./document_ja.md#ボタンを表す文字一覧)にあります。
 
-[4] `load . /sample.txt`とCUIに入力してください。"Loaded: ./sample.txt"と表示されたら成功です。
+[4] `load ./sample.txt`とCUIに入力してください。"Loaded: ./sample.txt"と表示されたら成功です。
 
 ![loaded](../images/cui_loaded.png)
 
@@ -62,7 +62,7 @@ Y>*40
 
 ![result](../images/result1.png)
 
-[6] 結果を確認したら、手動でつくるを押して、つくるモードに戻ってください。
+[6] 結果を確認したら、手動でつくるモードに戻ってください。
 
 [7] sample.txtを以下のように書き換えて保存してください。
 
